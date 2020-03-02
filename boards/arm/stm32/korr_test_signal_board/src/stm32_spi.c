@@ -74,7 +74,7 @@ void stm32_spidev_initialize(void) {
    */
 
 #  ifdef CONFIG_MTD_W25
-  stm32_configgpio(FLASH_SPI1_CS); /* FLASH chip select */
+  stm32_configgpio(FLASH_SPI2_CS); /* FLASH chip select */
 #  endif
 
 #  ifdef CONFIG_CAN_MCP2515
@@ -186,7 +186,7 @@ void stm32_spi1select(FAR struct spi_dev_s *dev, uint32_t devid, bool selected) 
 #    endif
 
 #    ifdef CONFIG_MTD_W25
-  stm32_gpiowrite(FLASH_SPI1_CS, !selected);
+  stm32_gpiowrite(FLASH_SPI2_CS, !selected);
 #    endif
 }
 
