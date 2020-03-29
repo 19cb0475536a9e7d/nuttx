@@ -785,7 +785,7 @@
 #  define STM32_NLCD                     0   /* No LCD */
 #  define STM32_NUSBOTG                  0   /* No USB OTG FS/HS */
 #  define STM32_NGPIO                    51  /* GPIOA-D */
-#  define STM32_NADC                     2   /* ADC1-2 */
+#  define STM32_NADC                     3   /* ADC1-2 */
 #  define STM32_NDAC                     2   /* DAC1, 2 channels */
 #  define STM32_NCAPSENSE                0   /* No capacitive sensing channels */
 #  define STM32_NCRC                     1   /* CRC */

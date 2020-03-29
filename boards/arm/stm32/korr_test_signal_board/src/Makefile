@@ -65,6 +65,10 @@ ifeq ($(CONFIG_PWM),y)
   CSRCS += stm32_pwm.c
 endif
 
+ifeq ($(CONFIG_DAC),y)
+  CSRCS += stm32_dac.c
+endif
+
 ifeq ($(CONFIG_SENSORS_ZEROCROSS),y)
   CSRCS += stm32_zerocross.c
 endif

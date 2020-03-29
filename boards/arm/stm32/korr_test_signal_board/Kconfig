@@ -48,16 +48,25 @@ config KORRTESTSIGNALBOARD_AT24_NXFFS
 endchoice # AT24 serial EPPROM configuration
 
 config KORRTESTSIGNALBOARD_FLASH
-	bool "MTD driver for external 4Mbyte W25Q32FV FLASH on SPI1"
+	bool "MTD driver for external 4Mbyte W25Q32FV FLASH on SPI2"
 	default n
 	select MTD
 	select MTD_W25
 	select MTD_SMART
 	select FS_SMARTFS
-	select STM32_SPI1
+	select STM32_SPI2
 	select MTD_BYTE_WRITE
 	---help---
 		Configures an MTD device for use with the onboard flash
+
+config KORRTESTSIGNALBOARD_FPGA
+	bool "FPGA driver for external XC6SLX device on SPI2 (depends on MTD)"
+	default n
+	depends on KORRTESTSIGNALBOARD_FLASH
+	select FPGA
+	select KORRTESTSIGNALBOARD_FLASH
+	---help---
+		Configures an FPGA device for use with the onboard FPGA
 
 config KORRTESTSIGNALBOARD_FLASH_MINOR
 	int "Minor number for the FLASH /dev/smart entry"

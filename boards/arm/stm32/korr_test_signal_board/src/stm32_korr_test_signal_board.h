@@ -97,6 +97,9 @@
 /* USB Soft Connect Pullup: PC.13 */
 #define GPIO_USB_PULLUP (GPIO_OUTPUT | GPIO_CNF_OUTPP | GPIO_MODE_50MHz | GPIO_OUTPUT_SET | GPIO_PORTA | GPIO_PIN12)
 
+#define KORR_TEST_SIGNAL_BOARD_PWMTIMER 3
+#define KORR_TEST_SIGNAL_BOARD_PWMCHANNEL 1
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -144,6 +147,39 @@ int stm32_adc_setup(void);
 #  endif
 
 /****************************************************************************
+ * Name: stm32_pwm_setup
+ *
+ * Description:
+ *   Initialize PWM and register the PWM driver.
+ *
+ ****************************************************************************/
+#  ifdef CONFIG_PWM
+int stm32_pwm_setup(void);
+#  endif
+
+/****************************************************************************
+ * Name: stm32_dac_setup
+ *
+ * Description:
+ *   Initialize DAC and register the DAC driver.
+ *
+ ****************************************************************************/
+#  ifdef CONFIG_DAC
+int stm32_dac_setup(void);
+#  endif
+
+/****************************************************************************
+ * Name: stm32_fpga_setup
+ *
+ * Description:
+ *   Initialize FPGA and register the FPGA driver.
+ *
+ ****************************************************************************/
+#  ifdef CONFIG_FPGA
+int stm32_fpga_setup(void);
+#  endif
+
+/****************************************************************************
  * Name: stm32_spidev_initialize
  *
  * Description:
@@ -157,15 +193,6 @@ void stm32_spidev_initialize(void);
  *
  * Description:
  *   Called to initialize Winbond W25 memory
- *
- ****************************************************************************/
-int stm32_w25initialize(int minor);
-
-/****************************************************************************
- * Name: stm32_fpga_initialize
- *
- * Description:
- *   Called to initialize FPGA from bitstream file in W25 memory
  *
  ****************************************************************************/
 int stm32_w25initialize(int minor);

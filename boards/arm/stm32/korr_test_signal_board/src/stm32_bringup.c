@@ -1,5 +1,5 @@
 /****************************************************************************
- * boards/arm/stm32/stm32f103-minimum/src/stm32_bringup.c
+ * boards/arm/stm32/stm32_korr_test_signal_board/src/stm32_bringup.c
  *
  *   Copyright (C) 2016-2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -39,12 +39,12 @@
 
 #include <nuttx/config.h>
 
-#include <sys/mount.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <syslog.h>
 #include <debug.h>
 #include <errno.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/mount.h>
+#include <syslog.h>
 
 #include <nuttx/board.h>
 #include <nuttx/timers/oneshot.h>
@@ -73,14 +73,9 @@
 
 #include "stm32_korr_test_signal_board.h"
 
-/* Conditional logic in stm32f103_minimum.h will determine if certain features
- * are supported.  Tests for these features need to be made after including
- * stm32f103_minimum.h.
- */
-
 #ifdef HAVE_RTC_DRIVER
-#  include <nuttx/timers/rtc.h>
 #  include "stm32_rtc.h"
+#  include <nuttx/timers/rtc.h>
 #endif
 
 /****************************************************************************
@@ -89,7 +84,7 @@
 
 /* Checking needed by W25 Flash */
 
-#define HAVE_W25      1
+#define HAVE_W25 1
 
 /* Can't support the W25 device if it SPI1 or W25 support is not enabled */
 
@@ -135,8 +130,7 @@
  *
  ****************************************************************************/
 
-int stm32_bringup(void)
-{
+int stm32_bringup(void) {
 #ifdef CONFIG_ONESHOT
   struct oneshot_lowerhalf_s *os = NULL;
 #endif
@@ -144,259 +138,238 @@ int stm32_bringup(void)
 
 #ifdef CONFIG_DEV_GPIO
   ret = stm32_gpio_initialize();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "Failed to initialize GPIO Driver: %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "Failed to initialize GPIO Driver: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_VIDEO_FB
   /* Initialize and register the framebuffer driver */
 
   ret = fb_register(0, 0);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: fb_register() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: fb_register() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_LCD_BACKPACK
   ret = stm32_lcd_backpack_init("/dev/slcd0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "Failed to initialize PCF8574 LCD, error %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "Failed to initialize PCF8574 LCD, error %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_ZEROCROSS
   /* Configure the zero-crossing driver */
 
   ret = stm32_zerocross_initialize();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "Failed to initialize Zero-Cross, error %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "Failed to initialize Zero-Cross, error %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_MMCSD
   ret = stm32_mmcsd_initialize(MMCSD_MINOR);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "Failed to initialize SD slot %d: %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "Failed to initialize SD slot %d: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_BMP180
   ret = stm32_bmp180initialize("/dev/press0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "Failed to initialize BMP180, error %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "Failed to initialize BMP180, error %d\n", ret);
+  }
 #endif
 
+#ifdef CONFIG_DAC
+  ret = stm32_dac_setup();
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: Failed to initialize W25 minor %d: %d\n", CONFIG_NSH_W25MINOR, ret);
+  }
+#endif
+  
 #ifdef HAVE_W25
   /* Initialize and register the W25 FLASH file system. */
 
   ret = stm32_w25initialize(CONFIG_NSH_W25MINOR);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: Failed to initialize W25 minor %d: %d\n",
-             CONFIG_NSH_W25MINOR, ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: Failed to initialize W25 minor %d: %d\n", CONFIG_NSH_W25MINOR, ret);
+  }
+#endif
+
+#ifdef HAVE_FPGA
+  /* Initialize and register the FPGA device. */
+
+  ret = stm32_fpga_setup();
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: Failed to initialize FPGA device: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_FS_PROCFS
   /* Mount the procfs file system */
 
   ret = mount(NULL, STM32_PROCFS_MOUNTPOINT, "procfs", 0, NULL);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: Failed to mount procfs at %s: %d\n",
-             STM32_PROCFS_MOUNTPOINT, ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: Failed to mount procfs at %s: %d\n", STM32_PROCFS_MOUNTPOINT, ret);
+  }
 #endif
 
 #ifdef HAVE_AT24
   /* Initialize the AT24 driver */
 
   ret = stm32_at24_automount(AT24_MINOR);
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_at24_automount failed: %d\n", ret);
-      return ret;
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_at24_automount failed: %d\n", ret);
+  }
 #endif /* HAVE_AT24 */
 
 #ifdef CONFIG_PWM
   /* Initialize PWM and register the PWM device. */
 
   ret = stm32_pwm_setup();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_pwm_setup() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_pwm_setup() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_AUDIO_TONE
   /* Configure and initialize the tone generator. */
 
   ret = stm32_tone_setup();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_tone_setup() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_tone_setup() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_LEDS_APA102
   /* Configure and initialize the APA102 LED Strip. */
 
   ret = stm32_apa102init("/dev/leddrv0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_apa102init() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_apa102init() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_LM75_I2C
   /* Configure and initialize the LM75 sensor */
 
   ret = stm32_lm75initialize("/dev/temp");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_lm75initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_lm75initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_RGBLED
   /* Configure and initialize the RGB LED. */
 
   ret = stm32_rgbled_setup();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_rgbled_setup() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_rgbled_setup() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_HCSR04
   /* Configure and initialize the HC-SR04 distance sensor */
 
   ret = stm32_hcsr04_initialize("/dev/dist0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_hcsr04_initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_hcsr04_initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_MAX6675
   ret = stm32_max6675initialize("/dev/temp0");
-  if (ret < 0)
-    {
-      serr("ERROR:  stm32_max6675initialize failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    serr("ERROR:  stm32_max6675initialize failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_CAN_MCP2515
   /* Configure and initialize the MCP2515 CAN device */
 
   ret = stm32_mcp2515initialize("/dev/can0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_mcp2515initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_mcp2515initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_CL_MFRC522
   ret = stm32_mfrc522initialize("/dev/rfid0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_mfrc522initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_mfrc522initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_ONESHOT
   os = oneshot_initialize(1, 10);
-  if (os)
-    {
-      ret = oneshot_register("/dev/oneshot", os);
-    }
+  if (os) {
+    ret = oneshot_register("/dev/oneshot", os);
+  }
 #endif
 
 #ifdef CONFIG_BUTTONS
   /* Register the BUTTON driver */
 
   ret = btn_lower_initialize("/dev/buttons");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: btn_lower_initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: btn_lower_initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_INPUT_NUNCHUCK
   /* Register the Nunchuck driver */
 
   ret = nunchuck_initialize("/dev/nunchuck0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: nunchuck_initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: nunchuck_initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_QENCODER
   /* Initialize and register the qencoder driver */
 
   ret = stm32_qencoder_initialize("/dev/qe0", CONFIG_KORR_TEST_SIGNAL_BOARD_QETIMER);
-  if (ret != OK)
-    {
-      syslog(LOG_ERR,
-             "ERROR: Failed to register the qencoder: %d\n",
-             ret);
-    }
+  if (ret != OK) {
+    syslog(LOG_ERR, "ERROR: Failed to register the qencoder: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_USERLED
   /* Register the LED driver */
 
   ret = userled_lower_initialize("/dev/userleds");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: userled_lower_initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: userled_lower_initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_APDS9960
   /* Register the APDS-9960 gesture sensor */
 
   ret = stm32_apds9960initialize("/dev/gest0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_apds9960initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_apds9960initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_SENSORS_VEML6070
   /* Register the UV-A light sensor */
 
   ret = stm32_veml6070initialize("/dev/uvlight0");
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_veml6070initialize() failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_veml6070initialize() failed: %d\n", ret);
+  }
 #endif
 
 #ifdef CONFIG_ADC
   /* Initialize ADC and register the ADC driver. */
 
   ret = stm32_adc_setup();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: stm32_adc_setup failed: %d\n", ret);
-    }
+  if (ret < 0) {
+    syslog(LOG_ERR, "ERROR: stm32_adc_setup failed: %d\n", ret);
+  }
 #endif
 
 #if defined(CONFIG_WL_NRF24L01)

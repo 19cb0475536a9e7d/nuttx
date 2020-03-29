@@ -47,7 +47,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef CONFIG_STM32_SPI1
+#ifdef CONFIG_STM32_SPI2
 #  include <nuttx/fs/smart.h>
 #  include <nuttx/mtd/configdata.h>
 #  include <nuttx/mtd/mtd.h>
@@ -67,13 +67,13 @@
  * timer
  */
 
-#define W25_SPI_PORT 1
+#define W25_SPI_PORT 2
 
 /* Configuration ************************************************************/
-/* Can't support the W25 device if it SPI1 or W25 support is not enabled */
+/* Can't support the W25 device if it SPI2 or W25 support is not enabled */
 
 #define HAVE_W25 1
-#if !defined(CONFIG_STM32_SPI1) || !defined(CONFIG_MTD_W25)
+#if !defined(CONFIG_STM32_SPI2) || !defined(CONFIG_MTD_W25)
 #  undef HAVE_W25
 #endif
 
